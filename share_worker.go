@@ -20,25 +20,23 @@ func checkErr(err error) {
 func ShareWorker(StopChan chan bool, WakeEvent *sync.Cond) {
   var lcvrun bool = true
   for lcvrun {
-    select {
-    case x, ok := <-StopChan:
-        if ok {
-            fmt.Println("Value was read:", x)
-            if x {
-              break
-            }
-        } else {
-            fmt.Println("Channel closed!")
-            lcvrun = false
-            break
+    x, ok := <-StopChan
+    if ok {
+        fmt.Println("Value was read:", x)
+        if x {
+          break
         }
-    default:
-        fmt.Println("No value ready, Waiting on Event.")
-        WakeEvent.L.Lock()
-        WakeEvent.Wait()
-        WakeEvent.L.Unlock()
+    } else {
+        fmt.Println("Channel closed!")
+        lcvrun = false
+        break
     }
+    fmt.Println("No value ready, Waiting on Event.")
+    WakeEvent.L.Lock()
+    WakeEvent.Wait()
+    WakeEvent.L.Unlock()
   }
+  fmt.Println("ShareWorker GR Exit")
   return 
 }
 
@@ -52,13 +50,13 @@ func processWalk(path string, info os.FileInfo, err error) error {
 func main() {
 	fmt.Println("Taco")
   var lock sync.Mutex
-  var stopchan chan bool = make(chan bool)
+  var stopchan chan bool = make(chan bool,10)
   wakeevent := sync.NewCond(&lock)
   go ShareWorker(stopchan,wakeevent)
   stopchan <- false
   fmt.Println("Sleeping in main")
   time.Sleep(3 * time.Second)
-  close(stopchan)
+  stopchan <- true
   wakeevent.Broadcast()
   time.Sleep(3 * time.Second)
 	//db, err := sql.Open("sqlite3", "./foo.db")
