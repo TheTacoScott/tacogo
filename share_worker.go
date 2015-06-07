@@ -57,7 +57,7 @@ func main() {
   fmt.Println("Sleeping in main")
   time.Sleep(3 * time.Second)
   stopchan <- true
-  wakeevent.Broadcast()
+  wakeevent.Signal()
   time.Sleep(3 * time.Second)
 	//db, err := sql.Open("sqlite3", "./foo.db")
 	//checkErr(err)
